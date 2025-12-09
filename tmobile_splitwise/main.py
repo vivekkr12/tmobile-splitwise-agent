@@ -134,6 +134,13 @@ def process_bill(pdf_path, config, dry_run=False):
     total_shares = sum(shares.values())
     print(f"  Total: ${total_shares:.2f}")
 
+    # Validate that shares sum equals total due
+    if abs(total_shares - bill.total_due) > 1.00:  # Allow up to $1 rounding difference
+        print(f"\n✗ VALIDATION ERROR: Sum of shares (${total_shares:.2f}) does not equal total due (${bill.total_due:.2f})")
+        print(f"  Difference: ${abs(total_shares - bill.total_due):.2f}")
+        print("\nThis indicates a parsing error. Please review the bill and LLM output.")
+        return False
+
     # Step 4: Connect to Splitwise
     print("\nStep 4: Connecting to Splitwise...")
     try:
