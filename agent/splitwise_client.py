@@ -122,6 +122,73 @@ def create_group_expense(s, group_id, total, payer_id, shares, description, deta
     return created, errors
 
 
+def add_expense_comment(s, expense_id, comment_text):
+    """
+    Add a comment to an expense.
+
+    Args:
+        s: Splitwise client
+        expense_id: ID of the expense to comment on
+        comment_text: Text content of the comment
+
+    Returns:
+        Tuple of (Comment, errors)
+    """
+    comment, errors = s.createComment(expense_id, comment_text)
+    return comment, errors
+
+
+def create_breakdown_comment(bill, user_mappings):
+    """
+    Create a formatted comment text showing the itemized breakdown.
+
+    Args:
+        bill: TMobileBill object with line charges
+        user_mappings: Dict mapping owner names to user IDs
+
+    Returns:
+        Formatted comment string
+    """
+    # Reverse mapping: user_id -> owner_name
+    id_to_name = {v: k for k, v in user_mappings.items()}
+
+    lines = ["📱 Line-by-line breakdown:", ""]
+
+    for line_charge in bill.line_charges:
+        owner = line_charge.owner
+
+        # Calculate total for this line
+        line_total = (
+            line_charge.line_amount +
+            line_charge.equipment_amount +
+            line_charge.one_time_amount
+        )
+
+        lines.append(f"{owner}:")
+        lines.append(f"  • Line charges: ${line_charge.line_amount:.2f}")
+
+        if line_charge.equipment_amount > 0:
+            lines.append(f"  • Equipment: ${line_charge.equipment_amount:.2f}")
+
+        if line_charge.one_time_amount > 0:
+            lines.append(f"  • One-time: ${line_charge.one_time_amount:.2f}")
+
+        lines.append(f"  • Subtotal: ${line_total:.2f}")
+        lines.append("")
+
+    # Add summary
+    lines.append("📊 Bill Summary:")
+    lines.append(f"  • Plan: ${bill.plan:.2f}")
+    lines.append(f"  • Equipment: ${bill.equipment:.2f}")
+
+    if bill.one_time_charges > 0:
+        lines.append(f"  • One-time charges: ${bill.one_time_charges:.2f}")
+
+    lines.append(f"  • Total: ${bill.total_due:.2f}")
+
+    return "\n".join(lines)
+
+
 def get_group_members(s, group_id):
     """
     Get all members of a Splitwise group.

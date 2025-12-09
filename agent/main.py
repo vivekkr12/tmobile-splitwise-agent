@@ -12,7 +12,9 @@ from agent.tmobile_bill_parser import pdf_to_text, parse_bill_with_llm
 from agent.splitwise_client import (
     client_from_env,
     check_duplicate_expense,
-    create_group_expense
+    create_group_expense,
+    add_expense_comment,
+    create_breakdown_comment
 )
 
 
@@ -189,6 +191,14 @@ def process_bill(pdf_path, config, dry_run=False):
         for user_id, amount in shares.items():
             owner = next((k for k, v in user_mappings.items() if v == user_id), "Unknown")
             print(f"  {owner}: ${amount:.2f}")
+
+        # Show what the breakdown comment would look like
+        print("\n" + "="*60)
+        print("Would add this breakdown comment:")
+        print("="*60)
+        breakdown_text = create_breakdown_comment(bill, user_mappings)
+        print(breakdown_text)
+
         return True
 
     print("\nStep 7: Creating expense in Splitwise...")
@@ -203,10 +213,30 @@ def process_bill(pdf_path, config, dry_run=False):
             return False
 
         if created:
+            expense_id = created.getId()
             print(f"✓ Expense created successfully!")
-            print(f"  ID: {created.getId()}")
+            print(f"  ID: {expense_id}")
             print(f"  Description: {created.getDescription()}")
             print(f"  Amount: ${created.getCost()}")
+
+            # Step 8: Add itemized breakdown as a comment
+            print("\nStep 8: Adding itemized breakdown comment...")
+            try:
+                breakdown_text = create_breakdown_comment(bill, user_mappings)
+                comment, comment_errors = add_expense_comment(s, expense_id, breakdown_text)
+
+                if comment_errors:
+                    print(f"⚠ Warning: Could not add comment: {comment_errors}")
+                    print("  (Expense was created successfully)")
+                elif comment:
+                    print(f"✓ Breakdown comment added successfully!")
+                else:
+                    print(f"⚠ Warning: Comment creation returned no result")
+
+            except Exception as e:
+                print(f"⚠ Warning: Error adding comment: {e}")
+                print("  (Expense was created successfully)")
+
             return True
         else:
             print(f"✗ Failed to create expense (no error details)")
@@ -222,8 +252,8 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python agent/main.py <path_to_bill.pdf> [--dry-run]")
         print("\nExample:")
-        print("  python agent/main.py ~/Downloads/TMobileBill_Nov2024.pdf")
-        print("  python agent/main.py ~/Downloads/TMobileBill_Nov2024.pdf --dry-run")
+        print("  python agent/main.py TMobileBill_Nov2024.pdf")
+        print("  python agent/main.py TMobileBill_Nov2024.pdf --dry-run")
         sys.exit(1)
 
     pdf_path = sys.argv[1]
