@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tmobile-splitwise-agent"
+version = "0.1.0"
+description = "AI agent that parses T-Mobile PDF bills and posts expenses to Splitwise"
+authors = [{ name = "Vivek Kumar", email = "vivek.ispat@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# Core runtime dependencies
+dependencies = [
+    "openai>=1.40.0",       # LLM client (structured JSON output)
+    "pydantic>=2.7.0",      # Strict validation of parsed bills
+    "PyPDF2>=3.0.1",        # Simple PDF → text extraction
+    "python-dotenv>=1.0.0", # Load secrets from .env
+    "pyyaml>=6.0.1",        # Config file parsing
+    "splitwise>=3.0.0",     # Splitwise Python SDK (OAuth + expense posting)
+    "requests>=2.32.0",     # Fallback HTTP calls if needed
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0", # Unit testing
+    "black>=24.4.0", # Code formatting
+    "ruff>=0.4.0",   # Linting
+    "mypy>=1.10.0",  # Static typing
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I"] # Error, Formatting, Imports
+ignore = ["E501"]        # Ignore long line warnings (Black handles wrapping)
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_ignores = true
+warn_return_any = true
