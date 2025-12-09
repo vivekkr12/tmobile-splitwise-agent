@@ -3,13 +3,13 @@
 Main script to process T-Mobile bills and create Splitwise expenses.
 
 Usage:
-    python agent/main.py <path_to_bill.pdf>
+    python tmobile_splitwise/main.py <path_to_bill.pdf>
 """
 import sys
 import json
 from pathlib import Path
-from agent.tmobile_bill_parser import pdf_to_text, parse_bill_with_llm
-from agent.splitwise_client import (
+from tmobile_splitwise.tmobile_bill_parser import pdf_to_text, parse_bill_with_llm
+from tmobile_splitwise.splitwise_client import (
     client_from_env,
     check_duplicate_expense,
     create_group_expense,
@@ -25,7 +25,7 @@ def load_config():
     """Load configuration from JSON file."""
     if not CONFIG_PATH.exists():
         print(f"Error: Configuration file not found at {CONFIG_PATH}")
-        print("Please run 'python agent/config_helper.py' first to set up your configuration.")
+        print("Please run 'python tmobile_splitwise/config_helper.py' first to set up your configuration.")
         sys.exit(1)
 
     with open(CONFIG_PATH, "r") as f:
@@ -34,12 +34,12 @@ def load_config():
     # Validate config
     if not config.get("splitwise", {}).get("group_id"):
         print("Error: group_id not set in configuration.")
-        print("Please run 'python agent/config_helper.py' to configure.")
+        print("Please run 'python tmobile_splitwise/config_helper.py' to configure.")
         sys.exit(1)
 
     if not config.get("user_mappings"):
         print("Error: user_mappings not set in configuration.")
-        print("Please run 'python agent/config_helper.py' to configure.")
+        print("Please run 'python tmobile_splitwise/config_helper.py' to configure.")
         sys.exit(1)
 
     return config
@@ -250,10 +250,10 @@ def process_bill(pdf_path, config, dry_run=False):
 def main():
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("Usage: python agent/main.py <path_to_bill.pdf> [--dry-run]")
+        print("Usage: python tmobile_splitwise/main.py <path_to_bill.pdf> [--dry-run]")
         print("\nExample:")
-        print("  python agent/main.py TMobileBill_Nov2024.pdf")
-        print("  python agent/main.py TMobileBill_Nov2024.pdf --dry-run")
+        print("  python tmobile_splitwise/main.py TMobileBill_Nov2024.pdf")
+        print("  python tmobile_splitwise/main.py TMobileBill_Nov2024.pdf --dry-run")
         sys.exit(1)
 
     pdf_path = sys.argv[1]

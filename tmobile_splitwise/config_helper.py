@@ -5,7 +5,7 @@ Run this script once to configure your settings.
 """
 import json
 from pathlib import Path
-from agent.splitwise_client import client_from_env, get_group_members
+from tmobile_splitwise.splitwise_client import client_from_env, get_group_members
 
 
 CONFIG_PATH = Path(__file__).parent.parent / "private" / "config.json"
@@ -21,6 +21,9 @@ def load_config():
 
 def save_config(config):
     """Save configuration to JSON file."""
+    # Ensure the directory exists
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
     with open(CONFIG_PATH, "w") as f:
         json.dump(config, f, indent=2)
     print(f"Configuration saved to {CONFIG_PATH}")
@@ -114,6 +117,29 @@ def main():
     print("T-Mobile Splitwise Agent - Configuration Setup")
     print("=" * 50)
 
+    # Check if config already exists
+    existing_config = load_config()
+    if existing_config:
+        print(f"\n✓ Found existing configuration at {CONFIG_PATH}")
+        print("\nCurrent configuration:")
+        print(json.dumps(existing_config, indent=2))
+
+        while True:
+            choice = input("\nDo you want to (u)pdate or (r)eplace the config? [u/r]: ").lower()
+            if choice in ['u', 'r']:
+                if choice == 'r':
+                    print("\n⚠ This will replace your entire configuration.")
+                    confirm = input("Are you sure? [y/n]: ").lower()
+                    if confirm != 'y':
+                        print("Configuration update cancelled.")
+                        return
+                    existing_config = None  # Treat as new config
+                break
+            else:
+                print("Please enter 'u' for update or 'r' for replace.")
+    else:
+        print(f"\n✓ No existing configuration found. Creating new config at {CONFIG_PATH}")
+
     # Load phone owners
     phone_owners_path = Path(__file__).parent.parent / "private" / "phone_owners.txt"
     if not phone_owners_path.exists():
@@ -140,27 +166,56 @@ def main():
         print("\nGet these from: https://secure.splitwise.com/apps")
         return
 
+    # Initialize config with existing values or create new
+    config = existing_config if existing_config else {}
+    if "splitwise" not in config:
+        config["splitwise"] = {}
+    if "user_mappings" not in config:
+        config["user_mappings"] = {}
+
     # Setup group
-    group_config = setup_group(s)
-    if not group_config:
-        return
+    if existing_config:
+        print(f"\nCurrent group: {config['splitwise'].get('group_name')} (ID: {config['splitwise'].get('group_id')})")
+        update_group = input("Update group? [y/n]: ").lower()
+        if update_group == 'y':
+            group_config = setup_group(s)
+            if group_config:
+                config["splitwise"]["group_id"] = group_config["group_id"]
+                config["splitwise"]["group_name"] = group_config["group_name"]
+    else:
+        group_config = setup_group(s)
+        if not group_config:
+            return
+        config["splitwise"]["group_id"] = group_config["group_id"]
+        config["splitwise"]["group_name"] = group_config["group_name"]
 
     # Setup user mappings
-    user_mappings = setup_user_mappings(s, group_config["group_id"], owner_names)
+    if existing_config:
+        print("\nCurrent user mappings:")
+        for owner, user_id in config['user_mappings'].items():
+            print(f"  {owner}: {user_id}")
+        update_mappings = input("Update user mappings? [y/n]: ").lower()
+        if update_mappings == 'y':
+            user_mappings = setup_user_mappings(s, config["splitwise"]["group_id"], owner_names)
+            config["user_mappings"] = user_mappings
+    else:
+        user_mappings = setup_user_mappings(s, config["splitwise"]["group_id"], owner_names)
+        config["user_mappings"] = user_mappings
 
     # Setup payer
-    payer_name = setup_payer(owner_names)
+    if existing_config:
+        print(f"\nCurrent payer: {config['splitwise'].get('payer_name')}")
+        update_payer = input("Update payer? [y/n]: ").lower()
+        if update_payer == 'y':
+            payer_name = setup_payer(owner_names)
+            config["splitwise"]["payer_name"] = payer_name
+    else:
+        payer_name = setup_payer(owner_names)
+        config["splitwise"]["payer_name"] = payer_name
 
-    # Create final config
-    config = {
-        "splitwise": {
-            "group_id": group_config["group_id"],
-            "group_name": group_config["group_name"],
-            "payer_name": payer_name
-        },
-        "user_mappings": user_mappings,
-        "description_template": "T-Mobile Bill - {month}/{year}"
-    }
+    # Ensure description template exists
+    if "description_template" not in config:
+        config["description_template"] = "T-Mobile Bill - {month}/{year}"
 
     # Save config
     save_config(config)

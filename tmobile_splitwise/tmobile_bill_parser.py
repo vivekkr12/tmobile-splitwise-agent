@@ -1,8 +1,8 @@
 import json
-from llm_client import call_chat_completions
+from tmobile_splitwise.llm_client import call_chat_completions
 import PyPDF2
 
-from agent.data_models import TMobileBill
+from tmobile_splitwise.data_models import TMobileBill
 
 # Step 1: Extract raw text
 def pdf_to_text(path: str) -> str:

@@ -78,28 +78,35 @@ Each line contains a phone number and the owner's name, separated by a hyphen:
 This interactive script will help you set up your Splitwise group and user mappings:
 
 ```bash
-python agent/config_helper.py
+python tmobile_splitwise/config_helper.py
 ```
 
-This will:
+**First time setup** - The script will:
+- Create the `private` directory automatically if it doesn't exist
 - Show all your Splitwise groups
 - Let you select which group to use
 - Map phone owners to Splitwise users
 - Set the default bill payer
 - Save configuration to `private/config.json`
 
+**Updating existing configuration** - If `config.json` already exists, you can:
+- **(u)pdate**: Selectively update only what you need (group, user mappings, or payer)
+- **(r)eplace**: Completely replace the configuration with new values
+
+The script will show your current settings and ask which parts you want to change.
+
 ## Usage
 
 ### Process a T-Mobile Bill
 
 ```bash
-python agent/main.py TMobileBill.pdf
+python tmobile_splitwise/main.py TMobileBill.pdf
 ```
 
 ### Dry Run (Preview Without Creating)
 
 ```bash
-python agent/main.py TMobileBill.pdf --dry-run
+python tmobile_splitwise/main.py TMobileBill.pdf --dry-run
 ```
 
 ## How It Works
@@ -123,7 +130,7 @@ This prevents accidentally creating duplicate expenses when running the script m
 ## Project Structure
 
 ```
-agent/
+tmobile_splitwise/
   ├── main.py              # Main script to process bills
   ├── config_helper.py     # Setup configuration (run once)
   ├── splitwise_client.py  # Splitwise API wrapper with duplicate detection
@@ -138,7 +145,7 @@ private/
 
 ## Configuration File
 
-The `private/config.json` file looks like this:
+The `private/config.json` file is automatically created and managed by `config_helper.py`. It looks like this:
 
 ```json
 {
@@ -157,7 +164,12 @@ The `private/config.json` file looks like this:
 }
 ```
 
-You can manually edit this file if needed, but it's easier to use `config_helper.py`.
+**To update your configuration**, simply run:
+```bash
+python tmobile_splitwise/config_helper.py
+```
+
+The script will detect your existing config and let you update specific parts or replace everything. You can also manually edit this file if needed.
 
 ## Example Output
 
@@ -249,10 +261,17 @@ This breakdown appears as a comment on the expense in Splitwise, allowing everyo
 ### Configuration Errors
 
 **"Configuration file not found"**
-- Run `python agent/config_helper.py` to set up your configuration.
+- Run `python tmobile_splitwise/config_helper.py` to set up your configuration.
+- The script will automatically create the `private` directory and `config.json` file.
 
 **"Owner 'Name' not found in user mappings"**
-- Update your `private/config.json` or run `config_helper.py` again.
+- Run `python tmobile_splitwise/config_helper.py` to update your configuration.
+- Choose **(u)pdate** and then update just the user mappings.
+
+**Need to change group or payer?**
+- Run `python tmobile_splitwise/config_helper.py` and select **(u)pdate**.
+- The script will show your current settings and let you update only what you need.
+- Your other settings will remain unchanged.
 
 ### Splitwise API Errors
 
