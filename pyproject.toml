@@ -39,6 +39,10 @@ line-length = 100
 select = ["E", "F", "I"] # Error, Formatting, Imports
 ignore = ["E501"]        # Ignore long line warnings (Black handles wrapping)
 
+[tool.setuptools.packages.find]
+include = ["tmobile_splitwise*"]
+exclude = ["private*", "tests*"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true
