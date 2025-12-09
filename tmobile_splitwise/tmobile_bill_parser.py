@@ -39,12 +39,37 @@ def parse_bill_with_llm(text: str) -> TMobileBill:
       "line_charges": [{{"phone": "xxx-xxx-xxxx", "owner": "string", "line_amount": float, "equipment_amount": float, "one_time_amount": float}}],
     }}
 
-    Month & year should be parsed only form the "bill issue date". Don't get this information from anywhere else.
-    Read one time charges only from "THIS BILL SUMMARY" section.
-    In the root node, plan should be the total plan amount.
-    Divide the plan amount equally between all lines in the line_charges section.
-    For owners, use this phone number to owner mapping:
-    {phone_owners}
+    STEP-BY-STEP INSTRUCTIONS:
+
+    STEP 1: Find the "THIS BILL SUMMARY" section in the text. This section has a table with these columns:
+    - Line Type | Plans | Equipment | Services | One-time charges | Total
+
+    STEP 2: In the "Totals" row of that table, extract the numeric values from:
+    - plan = the Plans column value
+    - equipment = the Equipment column value
+    - one_time_charges = the One-time charges column value
+    - total_due = the Total column value
+
+    STEP 3: Find the "bill issue date" at the top and extract:
+    - month = the month name
+    - year = the year
+
+    STEP 4: Count how many phone number rows exist (rows starting with "(xxx) xxx-xxxx"). Skip "Account" and "Totals" rows.
+
+    STEP 5: For EACH phone number row, extract this data:
+    a) phone = the exact phone number
+    b) equipment_amount: Read from the Equipment column of THIS phone's row:
+       - If it shows a dollar amount (even if Plans says "Included"), use that amount
+       - If it shows "-" or blank, use 0.0
+    c) one_time_amount: Read from the One-time charges column of THIS phone's row:
+       - If it shows a dollar amount, use that amount
+       - If it shows "-" or blank, use 0.0
+    d) line_amount: DO NOT read from the Plans column. Instead, calculate:
+       line_amount = plan (from STEP 2) ÷ number_of_phone_lines (from STEP 4)
+       This splits the total plan cost equally among all lines.
+    e) owner: Match from this mapping: {phone_owners}
+
+    STEP 6: CRITICAL CHECK - Even if a line has "Included" in the Plans column, you MUST still read the Equipment column value for that line. Do not assume it's 0.
 
     Input text:
     {text}
