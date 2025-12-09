@@ -2,25 +2,23 @@ import os
 from splitwise import Splitwise
 from splitwise.expense import Expense, ExpenseUser
 
-# Try to load .env file if it exists
+# Try to load .env file if it exists (override=True to override OS env vars)
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)
 except ImportError:
     # dotenv not installed, will use environment variables directly
     pass
 
 
-def client_from_env(cfg=None):
+def client_from_env():
     """
-    Create Splitwise client from environment variables using OAuth 2.0.
+    Create Splitwise client from environment variables using API key authentication.
 
     Required environment variables:
         - SW_CONSUMER_KEY: Your Splitwise app consumer key
         - SW_CONSUMER_SECRET: Your Splitwise app consumer secret
-
-    Args:
-        cfg: Optional configuration (not used, kept for backward compatibility)
+        - SW_API_KEY: Your Splitwise API key
 
     Returns:
         Authenticated Splitwise client
@@ -28,31 +26,22 @@ def client_from_env(cfg=None):
     Raises:
         ValueError: If required environment variables are not set
     """
-    consumer_key = os.getenv("SW_CONSUMER_KEY")
-    consumer_secret = os.getenv("SW_CONSUMER_SECRET")
-    access_token = os.getenv("SW_OAUTH2_ACCESS_TOKEN")
+    sw_consumer_key = os.getenv("SW_CONSUMER_KEY")
+    sw_consumer_secret = os.getenv("SW_CONSUMER_SECRET")
+    sw_api_key = os.getenv("SW_API_KEY")
 
-    if not consumer_key or not consumer_secret:
+    if not sw_consumer_key or not sw_consumer_secret or not sw_api_key:
         raise ValueError(
             "Missing Splitwise consumer credentials. Please set:\n"
             "  - SW_CONSUMER_KEY\n"
             "  - SW_CONSUMER_SECRET\n"
-            "in your environment variables or .env file"
-        )
-
-    if not access_token:
-        raise ValueError(
-            "Missing Splitwise OAuth2 access token. Please set:\n"
-            "  - SW_OAUTH2_ACCESS_TOKEN\n"
-            "Run 'python agent/oauth2_flow.py' to get your access token."
+            "  - SW_API_KEY\n"
+            "in your environment variables or .env file\n"
+            "Get your credentials from: https://secure.splitwise.com/apps"
         )
 
     # Create Splitwise client
-    s = Splitwise(consumer_key, consumer_secret)
-
-    # Set OAuth2 access token
-    s.setOAuth2AccessToken({"access_token": access_token})
-
+    s = Splitwise(sw_consumer_key, sw_consumer_secret, api_key=sw_api_key)
     return s
 
 

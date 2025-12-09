@@ -36,7 +36,7 @@ def parse_bill_with_llm(text: str) -> TMobileBill:
       "plan": float,
       "equipment": float,
       "one_time_charges": float,
-      "line_charges": [{{"phone": "xxx-xxx-xxxx", "owner": "string", "line_amount": float, "equipement_amount": float, "one_time_amount": float}}],
+      "line_charges": [{{"phone": "xxx-xxx-xxxx", "owner": "string", "line_amount": float, "equipment_amount": float, "one_time_amount": float}}],
     }}
 
     Month & year should be parsed only form the "bill issue date". Don't get this information from anywhere else.

@@ -18,7 +18,7 @@ dependencies = [
     "PyPDF2>=3.0.1",        # Simple PDF → text extraction
     "python-dotenv>=1.0.0", # Load secrets from .env
     "pyyaml>=6.0.1",        # Config file parsing
-    "splitwise>=3.0.0",     # Splitwise Python SDK (OAuth + expense posting)
+    "splitwise>=3.0.0",     # Splitwise Python SDK (API key auth + expense posting)
     "requests>=2.32.0",     # Fallback HTTP calls if needed
 ]
 

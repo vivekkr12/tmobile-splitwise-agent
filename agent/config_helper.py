@@ -4,7 +4,6 @@ Configuration helper script to set up Splitwise group and user mappings.
 Run this script once to configure your settings.
 """
 import json
-import os
 from pathlib import Path
 from agent.splitwise_client import client_from_env, get_group_members
 
@@ -129,14 +128,16 @@ def main():
 
     # Create Splitwise client
     try:
-        s = client_from_env(None)
+        s = client_from_env()
         current_user = s.getCurrentUser()
         print(f"\n✓ Connected to Splitwise as {current_user.getFirstName()}")
     except Exception as e:
         print(f"\n✗ Error connecting to Splitwise: {e}")
         print("\nMake sure you have set the following environment variables:")
-        print("  - SW_OAUTH1_TOKEN or SW_OAUTH2_ACCESS_TOKEN")
-        print("  - SW_OAUTH1_TOKEN_SECRET (for OAuth1)")
+        print("  - SW_CONSUMER_KEY")
+        print("  - SW_CONSUMER_SECRET")
+        print("  - SW_API_KEY")
+        print("\nGet these from: https://secure.splitwise.com/apps")
         return
 
     # Setup group

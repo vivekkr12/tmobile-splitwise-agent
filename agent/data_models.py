@@ -6,7 +6,7 @@ class LineCharge(BaseModel):
     phone: str
     owner: str
     line_amount: float
-    equipement_amount: float
+    equipment_amount: float
     one_time_amount: float
 
 

@@ -69,7 +69,7 @@ def calculate_shares(bill, user_mappings):
 
         # Add line amount, equipment, and one-time charges for this user
         shares[user_id] += line_charge.line_amount
-        shares[user_id] += line_charge.equipement_amount
+        shares[user_id] += line_charge.equipment_amount
         shares[user_id] += line_charge.one_time_amount
 
     return shares
@@ -135,7 +135,7 @@ def process_bill(pdf_path, config, dry_run=False):
     # Step 4: Connect to Splitwise
     print("\nStep 4: Connecting to Splitwise...")
     try:
-        s = client_from_env(config)
+        s = client_from_env()
         current_user = s.getCurrentUser()
         print(f"✓ Connected as {current_user.getFirstName()}")
     except Exception as e:
